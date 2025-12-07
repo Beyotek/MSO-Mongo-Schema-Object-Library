@@ -148,7 +148,7 @@ jobs:
     permissions:
       # In order to use Trusted Publisher
       id-token: write
-      contents: read
+      contents: write  # Changed from read to write for creating releases
 
     steps:
       - name: Download artifacts
@@ -159,3 +159,82 @@ jobs:
 
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  create_github_release:
+    name: Create GitHub Release
+    needs: [pypi_publish, details]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          VERSION="${{ needs.details.outputs.new_version }}"
+          
+          # Get the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          # Generate changelog
+          if [ -n "$PREV_TAG" ]; then
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            echo "## What's Changed" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGELOG=Initial release" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.details.outputs.tag_name }}
+          name: Release v${{ needs.details.outputs.new_version }}
+          body: |
+            # MSO v${{ needs.details.outputs.new_version }}
+            
+            ${{ steps.release_notes.outputs.CHANGELOG }}
+            
+            ## 📦 Installation
+            
+            ```bash
+            pip install MSO==${{ needs.details.outputs.new_version }}
+            ```
+            
+            ## 🔗 Links
+            - [PyPI Package](https://pypi.org/project/MSO/${{ needs.details.outputs.new_version }}/)
+            - [Documentation](https://github.com/Beyotek/MSO-Mongo-Schema-Object-Library#readme)
+            - [AI Coding Guide](https://github.com/Beyotek/MSO-Mongo-Schema-Object-Library/blob/master/AI_CODING_GUIDE.md)
+            
+            ## 🚀 Quick Start
+            
+            ```python
+            from mso import connect_to_mongo, get_model
+            
+            db = connect_to_mongo("mongodb://localhost:27017", "db-name")
+            People = get_model(db, "people")
+            
+            person = People(name="Alice", age=30)
+            person.save()
+            ```
+          files: |
+            dist/*
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
