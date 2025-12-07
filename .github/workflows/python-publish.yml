@@ -15,7 +15,7 @@ jobs:
       suffix: ${{ steps.release.outputs.suffix }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Extract tag and Details
         id: release
         run: |
@@ -121,6 +121,8 @@ jobs:
 
       - uses: actions/checkout@master
       - name: Merge version-${{ needs.details.outputs.new_version }} -> master
+        continue-on-error: true
+        id: merge_step
         uses: devmasx/merge-branch@master
         with:
           type: now
@@ -128,6 +130,13 @@ jobs:
           target_branch: master
           message: Merge Into Master - Release version ${{ needs.details.outputs.new_version }}
           github_token: ${{ secrets.GH_TOKEN }}
+      
+      - name: Notify if merge failed
+        if: steps.merge_step.outcome == 'failure'
+        run: |
+          echo "⚠️ Auto-merge failed! Manual merge required."
+          echo "Run: git checkout master && git pull origin version-${{ needs.details.outputs.new_version }}"
+          echo "Then resolve conflicts and push."
 
   pypi_publish:
     name: Upload release to PyPI
