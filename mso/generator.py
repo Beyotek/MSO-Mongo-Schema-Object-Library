@@ -94,9 +94,12 @@ def generate_nested_class(name, schema, class_map):
     return new_class
 
 
-def get_model(db, collection_name):
+def get_model(db, collection_name: str):
     """
     Dynamically generates a Python class model for a MongoDB collection using its $jsonSchema validator.
+    
+    This is the primary function for creating MSO models. It inspects the MongoDB collection's schema
+    and generates a Python class with properties matching the schema fields.
 
     This function connects to the specified MongoDB collection, detects whether it is a view or a regular
     collection, and constructs a dynamic Python class based on its schema. For views, a read-only model

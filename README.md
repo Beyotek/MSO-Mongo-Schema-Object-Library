@@ -28,6 +28,19 @@
 pip install mso
 ```
 
+---
+
+## 🤖 AI Coding Assistant Support
+
+MSO includes comprehensive documentation for AI coding assistants:
+- **AI_CODING_GUIDE.md** - Detailed guide for AI assistants with examples and patterns
+- **.ai/quick-reference.md** - Quick reference for common operations
+- **.ai/examples.md** - Code examples for typical use cases
+
+When using AI assistants (like GitHub Copilot, ChatGPT, Claude), reference these files for optimal code generation.
+
+---
+
 # Recommended MongoDB Validation Schema Format
 ```bash
 {
