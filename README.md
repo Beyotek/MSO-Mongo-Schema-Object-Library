@@ -60,12 +60,10 @@ pip install mso
 In this basic example we have already created a $jsonSchema validator for the "People" collection in MongoDB. We create a new person, update some information and save the person MongoDB.
 
 ```python
-from pymongo import MongoClient
-from mso.generator import get_model
+from mso import connect_to_mongo, get_model
 
 # Connect to MongoDB
-client = MongoClient("mongodb://localhost:27017")
-db = client["mydb"]
+db = connect_to_mongo("mongodb://localhost:27017", "db-name")
 
 # Generate a model based on the "people" collection's schema
 People = get_model(db, "people")
@@ -148,16 +146,10 @@ MSO includes a powerful .summarize() method to help you quickly explore and unde
 ### 🔍 Example
 
 ```python
-import os
-from pymongo import MongoClient
-from mso.generator import get_model
+from mso import connect_to_mongo, get_model
 
 # Connect to MongoDB
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-MONGO_DB = os.getenv("MONGO_DB", "mydb")
-
-client = MongoClient(MONGO_URI)
-db = client[MONGO_DB]
+db = connect_to_mongo("mongodb://localhost:27017", "db-name")
 
 # Get the model for the "people" collection
 People = get_model(db, "people")
@@ -225,11 +217,9 @@ MSO makes it easy to compare two MongoDB documents—either as model instances o
 ### Basic Example
 
 ```python
-from mso.generator import get_model
-from pymongo import MongoClient
+from mso import connect_to_mongo, get_model
 
-client = MongoClient("mongodb://localhost:27017")
-db = client["mydb"]
+db = connect_to_mongo("mongodb://localhost:27017", "db-name")
 People = get_model(db, "people")
 
 # Create a valid model instance
@@ -278,16 +268,10 @@ Both are stored as UTC datetime.datetime objects.
 Timestamps are enabled by default. To disable them, set the `timestamps` parameter to `False` when creating a model.
 
 ```python
-import os
-from time import sleep
-from pymongo import MongoClient
-from mso.generator import get_model
+from mso import connect_to_mongo, get_model
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-MONGO_DB = os.getenv("MONGO_DB", "mydb")
-
-client = MongoClient(MONGO_URI)
-db = client[MONGO_DB]
+# Connect to MongoDB
+db = connect_to_mongo("mongodb://localhost:27017", "db-name")
 
 # Get the model for the collection
 People = get_model(db, "people")
@@ -304,12 +288,11 @@ You can use decorators like @pre_save, @post_save, @pre_delete, and @post_delete
 ### Example: Automatically output a message when a document is saved
 
 ```python
-from mso.base_model import MongoModel, pre_save, post_save
-from pymongo import MongoClient
+from mso import connect_to_mongo, get_model
+from mso.base_model import MongoModel, post_save
 
-client = MongoClient("mongodb://localhost:27017")
-db = client["mydb"]
-
+# Connect to MongoDB
+db = connect_to_mongo("mongodb://localhost:27017", "db-name")
 
 # Define the model hooks you would like to use
 class People(MongoModel):
@@ -330,13 +313,11 @@ person.save()
 # 🧪 REST API with Swagger
 MSO can automatically generate a REST API for your models, complete with Swagger documentation. This allows you to easily expose your MongoDB collections as RESTful endpoints.
 ```python
+from mso import connect_to_mongo
 from mso.api import start_api
-from pymongo import MongoClient
-from mso.generator import get_model
 
 # Connect to MongoDB
-client = MongoClient("mongodb://localhost:27017")
-db = client["mydb"]
+db = connect_to_mongo("mongodb://localhost:27017", "db-name")
 
 start_api(db)
 ```
@@ -351,11 +332,11 @@ You can extend the auto-generated API with your own custom routes using the extr
 
 ```python
 from fastapi import APIRouter
+from mso import connect_to_mongo
 from mso.api import start_api
 
 # Connect to MongoDB
-client = MongoClient("mongodb://localhost:27017")
-db = client["mydb"]
+db = connect_to_mongo("mongodb://localhost:27017", "db-name")
 
 # Define your custom routes
 custom_router = APIRouter()

@@ -12,7 +12,7 @@
 #  Gitlab: https://github.com/chuckbeyor101/MSO-Mongo-Schema-Object-Library                                            #
 # ######################################################################################################################
 
-from pymongo import MongoClient
+from mso import connect_to_mongo
 from mso.api import start_api
 from fastapi import APIRouter
 import os
@@ -20,8 +20,7 @@ import os
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB = os.getenv("MONGO_DB", "mydb")
 
-client = MongoClient(MONGO_URI)
-db = client[MONGO_DB]
+db = connect_to_mongo(MONGO_URI, MONGO_DB)
 
 custom_router = APIRouter()
 

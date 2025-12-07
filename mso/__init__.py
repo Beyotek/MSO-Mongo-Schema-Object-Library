@@ -11,3 +11,8 @@
 #                                                                                                                      #
 #  Gitlab: https://github.com/chuckbeyor101/MSO-Mongo-Schema-Object-Library                                            #
 # ######################################################################################################################
+
+from mso.connection import connect_to_mongo
+from mso.generator import get_model
+
+__all__ = ['connect_to_mongo', 'get_model']

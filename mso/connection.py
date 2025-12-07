@@ -11,42 +11,31 @@
 #                                                                                                                      #
 #  Gitlab: https://github.com/chuckbeyor101/MSO-Mongo-Schema-Object-Library                                            #
 # ######################################################################################################################
-import os
-from mso import get_model, connect_to_mongo
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-MONGO_DB = os.getenv("MONGO_DB", "mydb")
+from pymongo import MongoClient
 
-db = connect_to_mongo(MONGO_URI, MONGO_DB)
 
-# Get the model for the collection
-PeopleSummaryView = get_model(db, "people_summary_view")
-
-# Querying documents
-person = PeopleSummaryView.find_one({"name": "Tony Pajama Sr"})
-
-# Querying documents
-people = PeopleSummaryView.find_many({"name": "Tony Pajama Sr"})
-
-# Manipulate values locally
-person.name = "Tony Pajama Updated"
-
-# Print the updated person object
-print(f"Updated Person: {person.name}, Age: {person.age}")
-# Print Nested Field
-print(f"Nested Field - Primary Physician: {person.health.primary_physician.name}")
-
-# This should fail since the view is read-only
-try:
-    person.save()
-except Exception as e:
-    print(f"Error saving person: {e}")
-
-for p in people:
-    print(f"Person: {p.name}, Age: {p.age}")
-    print(f"Nested Field - Primary Physician: {p.health.primary_physician.name}")
-    # for each address in p.addresses
-    for address in p.addresses:
-        print(f"Address: {address.street}")
-
-pass
+def connect_to_mongo(uri: str = "mongodb://localhost:27017", database: str = "mydb"):
+    """
+    Establish a connection to MongoDB and return the database object.
+    
+    This helper function simplifies database connection setup by handling
+    the MongoClient creation internally, eliminating the need to import
+    pymongo separately in your application code.
+    
+    Args:
+        uri (str): The MongoDB connection URI. Defaults to "mongodb://localhost:27017"
+        database (str): The name of the database to connect to. Defaults to "mydb"
+    
+    Returns:
+        pymongo.database.Database: The database object ready for use with get_model()
+    
+    Example:
+        >>> from mso.connection import connect_to_mongo
+        >>> from mso.generator import get_model
+        >>> 
+        >>> db = connect_to_mongo("mongodb://localhost:27017", "mydb")
+        >>> People = get_model(db, "people")
+    """
+    client = MongoClient(uri)
+    return client[database]

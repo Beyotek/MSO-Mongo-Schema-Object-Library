@@ -13,15 +13,13 @@
 # ######################################################################################################################
 
 import os
-from pymongo import MongoClient
-from mso.generator import get_model
+from mso import get_model, connect_to_mongo
 from pprint import pprint
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB = os.getenv("MONGO_DB", "mydb")
 
-client = MongoClient(MONGO_URI)
-db = client[MONGO_DB]
+db = connect_to_mongo(MONGO_URI, MONGO_DB)
 
 # Get the model for the collection
 People = get_model(db, "people")
