@@ -13,9 +13,10 @@
 # ######################################################################################################################
 
 from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure, ConfigurationError, ServerSelectionTimeoutError
 
 
-def connect_to_mongo(uri: str = "mongodb://localhost:27017", database: str = "mydb"):
+def connect_to_mongo(uri: str = "mongodb://localhost:27017", database: str = "mydb", timeout: int = 5000):
     """
     Establish a connection to MongoDB and return the database object.
     
@@ -26,16 +27,45 @@ def connect_to_mongo(uri: str = "mongodb://localhost:27017", database: str = "my
     Args:
         uri (str): The MongoDB connection URI. Defaults to "mongodb://localhost:27017"
         database (str): The name of the database to connect to. Defaults to "mydb"
+        timeout (int): Server selection timeout in milliseconds. Defaults to 5000 (5 seconds)
     
     Returns:
         pymongo.database.Database: The database object ready for use with get_model()
     
+    Raises:
+        ConnectionFailure: If the connection to MongoDB fails
+        ConfigurationError: If the URI is malformed or invalid
+        ServerSelectionTimeoutError: If the server cannot be reached within the timeout period
+        ValueError: If the database name is empty or invalid
+    
     Example:
-        >>> from mso.connection import connect_to_mongo
-        >>> from mso.generator import get_model
+        >>> from mso import connect_to_mongo, get_model
         >>> 
         >>> db = connect_to_mongo("mongodb://localhost:27017", "mydb")
         >>> People = get_model(db, "people")
+        
+        >>> # With custom timeout
+        >>> db = connect_to_mongo("mongodb://localhost:27017", "mydb", timeout=10000)
     """
-    client = MongoClient(uri)
-    return client[database]
+    if not database or not isinstance(database, str):
+        raise ValueError("Database name must be a non-empty string")
+    
+    if not uri or not isinstance(uri, str):
+        raise ValueError("MongoDB URI must be a non-empty string")
+    
+    try:
+        client = MongoClient(uri, serverSelectionTimeoutMS=timeout)
+        # Test the connection
+        client.admin.command('ping')
+        return client[database]
+    except ConfigurationError as e:
+        raise ConfigurationError(f"Invalid MongoDB URI: {uri}. Error: {str(e)}")
+    except ServerSelectionTimeoutError as e:
+        raise ServerSelectionTimeoutError(
+            f"Could not connect to MongoDB at {uri} within {timeout}ms. "
+            f"Please check if MongoDB is running and the URI is correct. Error: {str(e)}"
+        )
+    except ConnectionFailure as e:
+        raise ConnectionFailure(f"Failed to connect to MongoDB at {uri}. Error: {str(e)}")
+    except Exception as e:
+        raise RuntimeError(f"Unexpected error connecting to MongoDB: {str(e)}")
