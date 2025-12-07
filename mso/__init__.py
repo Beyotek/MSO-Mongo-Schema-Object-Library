@@ -48,5 +48,5 @@ For more examples and documentation, see:
 from mso.connection import connect_to_mongo
 from mso.generator import get_model
 
-__version__ = "1.0.81"
+__version__ = "1.0.84"
 __all__ = ['connect_to_mongo', 'get_model']
